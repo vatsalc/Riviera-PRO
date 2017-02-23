@@ -1,0 +1,43 @@
+// Copyright (c) Aldec, Inc.
+// All rights reserved.
+//
+// Last modified: $Date: 2007-10-30 17:40:56 +0100 (Tue, 30 Oct 2007) $
+// $Revision: 68819 $
+
+vunit CheckFailures(tb.UUT)
+{
+    default clock = fell(Clk);
+
+    // the lights for the road A (GreenA) and for the road B (GreenB)
+    // can never be green simultaneously
+    property as_a_p = never (GreenA & GreenB);
+
+    // the lights for the road A (GreenA) and for the pedestrians (GreenCrossing | FlashingGreenCrossing)
+    // can never be green simultaneously
+    property as_b_p = never (GreenA & (GreenCrossing | FlashingGreenCrossing));
+
+    // whenever the failure happens (FailureDetect)
+    // the lights for the road A and for the road B should be flashing yellow (FlashingYellowA & FlashingYellowB)
+    // all the time the sensors detect a failure
+    property as_c_p = always { rose(FailureDetect) } |-> {[*1];FlashingYellowA & FlashingYellowB };
+
+    // if the failure happens the lights for the pedestrians can be never on
+    property as_d_p = always { rose(FailureDetect)} |->  {[*1];(!GreenCrossing & !FlashingGreenCrossing & !RedCrossing)};
+
+    // NOTE: this verification unit contains more than one assertion directives.
+    as_a : assert as_a_p;
+    as_b : assert as_b_p;
+    as_c : assert as_c_p;
+    as_d : assert as_d_p;
+}
+
+
+vunit OtherEvents(tb.UUT)
+{
+    default clock = fell(Clk);
+
+    // the red light for the road A can never appear immediately after a pushed key
+
+    property as_i_p = never {rose(Key&GreenA) ;RedA};
+    as_i : assert as_i_p;
+}
